@@ -13,3 +13,6 @@
 [submodule "lib/optimism-bedrock-contracts"]
 	path = lib/optimism-bedrock-contracts
 	url = https://github.com/TusimaNetwork/optimism-bedrock-contracts
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
