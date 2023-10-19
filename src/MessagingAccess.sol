@@ -161,6 +161,10 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         zkSyncRefundRecipient = recipient;
     }
 
+    function setZkSyncToL2Value(uint256 value) external onlyAdmin {
+        zkSyncToL2Value = value;
+    }
+
     /*
      * @description: change debug mode
      * @return {*}

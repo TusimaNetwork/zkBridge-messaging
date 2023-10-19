@@ -68,4 +68,5 @@ contract MessagingStorage {
     uint256 public zkSyncL2GasPerPubdataByteLimit = 800;
     bytes[] public zkSyncFactoryDeps;
     address public zkSyncRefundRecipient;
+    uint256 public zkSyncToL2Value = 0.001 ether;
 }

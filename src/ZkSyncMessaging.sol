@@ -11,7 +11,7 @@ contract ZkSyncMessaging is MessagingStorage {
         bytes memory _calldata = abi.encodeWithSignature("executeMessage(bytes)",message);
 
         IZkSync zksync = IZkSync(zkSyncAddress);
-        zksync.requestL2Transaction{value: msg.value}(
+        zksync.requestL2Transaction{value: zkSyncToL2Value}(
             routerAddr,
             zkSyncL2Value,
             _calldata,
@@ -22,7 +22,7 @@ contract ZkSyncMessaging is MessagingStorage {
         );
     }
 
-    function zkSyncL2ToL1(bytes memory message) internal {
-        L1_MESSENGER_CONTRACT.sendToL1(message);
+    function zkSyncL2ToL1(bytes memory message) internal returns(bytes32) {
+        return L1_MESSENGER_CONTRACT.sendToL1(message);
     }
 }
