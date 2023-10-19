@@ -2,8 +2,10 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.20"
+solc_version = "0.8.16"
 auto_detect_solc = true
+auto_detect_remappings = false
+ffi = true
 fs_permissions = [{ access = "read", path = "./"}]
 
 [rpc_endpoints]
