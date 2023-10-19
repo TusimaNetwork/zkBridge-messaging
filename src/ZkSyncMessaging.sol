@@ -11,6 +11,8 @@ contract ZkSyncMessaging is MessagingStorage {
         bytes memory _calldata = abi.encodeWithSignature("executeMessage(bytes)",message);
 
         IZkSync zksync = IZkSync(zkSyncAddress);
+
+        // TODO Cause we don't charge any fee for now, but zkSync does, so we pay for them at this version.
         zksync.requestL2Transaction{value: zkSyncToL2Value}(
             routerAddr,
             zkSyncL2Value,
