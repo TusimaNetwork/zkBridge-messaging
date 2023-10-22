@@ -265,7 +265,7 @@ contract RelayerTest is Test {
         getDefaultContractSetup(messageParams);
 
         vm.expectRevert();
-        // The MPT verification should fail since the SourceAMB address provided is different than the one in the account proof
+        // The MPT verification should fail since the Source Relayer contract address provided is different than the one in the account proof
         relayer.vMsg(
             messageParams.blockNumber,
             messageParams.message,
@@ -274,7 +274,7 @@ contract RelayerTest is Test {
         );
     }
 
-    function test_ExecuteMessage_WrongTargetAMBFails() public {
+    function test_ExecuteMessage_WrongTargetRelayerFails() public {
         ExecuteMessageFromStorageParams memory messageParams = parseParams(
             "storage1"
         );
