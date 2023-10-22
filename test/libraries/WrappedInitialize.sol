@@ -5,7 +5,7 @@ import {Messaging} from "src/Messaging.sol";
 
 library WrappedInitialize {
     function init(
-        address targetAMB,
+        address target,
         uint32 sourceChainId,
         address lightClient,
         address broadcaster,
@@ -18,7 +18,7 @@ library WrappedInitialize {
         lightClients[0] = lightClient;
         address[] memory broadcasters = new address[](1);
         broadcasters[0] = broadcaster;
-        Messaging(targetAMB).initialize(
+        Messaging(target).initialize(
             sourceChainIds, lightClients, broadcasters, timelock, guardian, true
         );
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// import "../ethereum/Structs.sol";
+// import "./Structs.sol";
 
 interface ILightClientGetter {
     // function head() external view returns (uint64);
