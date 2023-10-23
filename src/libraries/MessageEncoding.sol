@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import {Message} from "../interfaces/IMessaging.sol";
+import {Message} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 
 // From here: https://stackoverflow.com/questions/74443594/how-to-slice-bytes-memory-in-solidity
 library BytesLib {

@@ -6,7 +6,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {Bytes32} from "./libraries/Typecast.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
-import {ISender, Message} from "./interfaces/IMessaging.sol";
+import {ISender, Message} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
 import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
 

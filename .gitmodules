@@ -18,3 +18,6 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
 	branch = v4.8.1
+[submodule "lib/zkBridge-messaging-interfaces"]
+	path = lib/zkBridge-messaging-interfaces
+	url = https://github.com/TusimaNetwork/zkBridge-messaging-interfaces

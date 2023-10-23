@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import { ILightClientGetter as ILightClient } from "./interfaces/ILightClient.sol";
-import { MessageStatus } from "./interfaces/IMessaging.sol";
+import { ILightClientGetter as ILightClient } from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
+import { MessageStatus } from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 
 contract MessagingStorage {
     /*//////////////////////////////////////////////////////////////

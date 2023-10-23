@@ -6,3 +6,4 @@ forge-std/=lib/forge-std/src/
 optimism-bedrock-contracts/=lib/optimism-bedrock-contracts/
 v2-testnet-contracts/=lib/v2-testnet-contracts/
 zkBridge-lightClient/=lib/zkBridge-lightClient/
+zkBridge-messaging-interfaces/=lib/zkBridge-messaging-interfaces

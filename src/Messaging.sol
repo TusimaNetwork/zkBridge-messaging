@@ -3,7 +3,7 @@ pragma solidity 0.8.16;
 
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import { ILightClientGetter as ILightClient } from "./interfaces/ILightClient.sol";
+import { ILightClientGetter as ILightClient } from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
 
 import {Relayer} from "./Relayer.sol";
 import {Sender} from "./Sender.sol";

@@ -3,7 +3,7 @@ pragma solidity 0.8.16;
 
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-import { ILightClientGetter as ILightClient } from "./interfaces/ILightClient.sol";
+import { ILightClientGetter as ILightClient } from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
 
 contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {

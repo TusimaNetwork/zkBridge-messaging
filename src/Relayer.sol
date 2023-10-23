@@ -8,7 +8,7 @@ import {Address} from "./libraries/Typecast.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 
 import {MessagingStorage} from "./MessagingStorage.sol";
-import {IReceiver, IRelayer, Message, MessageStatus} from "./interfaces/IMessaging.sol";
+import {IReceiver, IRelayer, Message, MessageStatus} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 
 import "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
 

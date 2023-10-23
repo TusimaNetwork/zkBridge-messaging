@@ -10,7 +10,7 @@ import {UUPSProxy} from "src/libraries/Proxy.sol";
 import {SSZ} from "src/libraries/SimpleSerialize.sol";
 import {LightClientMock} from "./mock/LightClientMock.sol";
 import {WrappedInitialize} from "./libraries/WrappedInitialize.sol";
-import {MessageStatus, IReceiver} from "src/interfaces/IMessaging.sol";
+import {MessageStatus, IReceiver} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 
 // The weird ordering here is because vm.parseJSON requires
 // alphabetaical ordering of the fields in the struct
