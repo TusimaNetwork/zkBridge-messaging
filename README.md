@@ -31,44 +31,12 @@ $ forge build
 $ forge test
 ```
 
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
 ### Deploy
 
 ```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ source .env
 ```
-#### deploy Messing contract
+deploy Messing contract and verify:
 ```shell
-$ forge script script/DeployMessaging.s.sol:DeployMessing --broadcast --verify --rpc-url ${SEPOLIA_RPC_URL}
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+$ forge script script/DeployMessaging.s.sol:DeployMessing --broadcast --verify --rpc-url ${ <Network_RPC_URL> }
 ```
