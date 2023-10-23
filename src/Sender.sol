@@ -49,7 +49,7 @@ contract Sender is ZkSyncMessaging, ISender {
         // TODO add limit for supporting chain
 
         if (targetChainId == block.chainid) revert CannotSendToSameChain();
-        (bytes memory message, bytes32 messageRoot) = _hashMsg(
+        (bytes memory _message, bytes32 messageRoot) = _hashMsg(
             targetChainId,
             Bytes32.fromAddress(targetAddr),
             message
@@ -58,17 +58,17 @@ contract Sender is ZkSyncMessaging, ISender {
 
         // zkSync l1 -> l2
         if (block.chainid == 5 && targetChainId == 280) {
-            zkSyncL1ToL2(message, chainRouter[targetChainId]);
-            emit SendZkSyncMsgL1ToL2(nonce++, messageRoot, message);
+            zkSyncL1ToL2(_message, chainRouter[targetChainId]);
+            emit SendZkSyncMsgL1ToL2(nonce++, messageRoot, _message);
             return messageRoot;
         }
 
         // zkSync l2 -> l1
         if (block.chainid == 280 && targetChainId == 5) {
-            bytes32 messageHash = zkSyncL2ToL1(message);
+            bytes32 messageHash = zkSyncL2ToL1(_message);
         }
 
-        emit SendMsg(nonce++, messageRoot, message);
+        emit SendMsg(nonce++, messageRoot, _message);
         return messageRoot;
     }
 
