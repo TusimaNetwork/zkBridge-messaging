@@ -25,7 +25,7 @@ interface ISender {
     ) external returns (bytes32);
 }
 
-interface IRelaer {
+interface IRelayer {
     // ethereum --> anywhere, debug version
     function vMsg(
         uint64 slot,

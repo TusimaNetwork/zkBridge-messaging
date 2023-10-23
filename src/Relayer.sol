@@ -8,7 +8,7 @@ import {Address} from "./libraries/Typecast.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 
 import {MessagingStorage} from "./MessagingStorage.sol";
-import {IReceiver, IRelaer, Message, MessageStatus} from "./interfaces/IMessaging.sol";
+import {IReceiver, IRelayer, Message, MessageStatus} from "./interfaces/IMessaging.sol";
 
 import "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
 
@@ -17,7 +17,7 @@ import "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
 contract Relayer is
     MessagingStorage,
     ReentrancyGuardUpgradeable,
-    IRelaer
+    IRelayer
 {
     /// @notice The minimum delay for using any information from the light client.
     uint256 public constant MIN_LIGHT_CLIENT_DELAY = 2 minutes;
