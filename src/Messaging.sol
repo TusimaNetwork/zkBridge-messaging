@@ -38,6 +38,11 @@ contract Messaging is Sender, Relayer, MessagingAccess, UUPSUpgradeable {
         _grantRole(DEFAULT_ADMIN_ROLE, _timelock);
         __UUPSUpgradeable_init();
 
+        zkSyncL2Value = 0;
+        zkSyncL2GasLimit = 2000000;
+        zkSyncL2GasPerPubdataByteLimit = 800;
+        zkSyncToL2Value = 0.001 ether;
+
         require(_sourceChainIds.length == _lightClients.length);
         require(_sourceChainIds.length == _broadcasters.length);
 

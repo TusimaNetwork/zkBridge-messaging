@@ -63,10 +63,10 @@ contract MessagingStorage {
     mapping(uint32 => address) public chainRouter;
 
     address public zkSyncAddress; 
-    uint256 public zkSyncL2Value = 0;
-    uint256 public zkSyncL2GasLimit = 2000000;
-    uint256 public zkSyncL2GasPerPubdataByteLimit = 800;
+    uint256 public zkSyncL2Value;
+    uint256 public zkSyncL2GasLimit;
+    uint256 public zkSyncL2GasPerPubdataByteLimit;
     bytes[] public zkSyncFactoryDeps;
     address public zkSyncRefundRecipient;
-    uint256 public zkSyncToL2Value = 0.001 ether;
+    uint256 public zkSyncToL2Value;
 }
