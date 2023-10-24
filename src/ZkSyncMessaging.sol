@@ -8,7 +8,7 @@ import "v2-testnet-contracts/l2/system-contracts/Constants.sol";
 contract ZkSyncMessaging is MessagingStorage {
 
     function zkSyncL1ToL2(bytes memory message, address routerAddr) internal {
-        bytes memory _calldata = abi.encodeWithSignature("executeMessage(bytes)",message);
+        bytes memory _calldata = abi.encodeWithSignature("vMsgZkSyncL1ToL2(bytes)",message);
 
         IZkSync zksync = IZkSync(zkSyncAddress);
 
