@@ -7,7 +7,7 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract DeployMessing is Script {
-    address public proxyAddress;
+    address payable public proxyAddress;
     address public ImplementationAddress;
     Messaging public messaging;
 
@@ -30,7 +30,11 @@ contract DeployMessing is Script {
                 vm.envBool("sendingEnabled")
             )
         );
-        proxyAddress = address(new ERC1967Proxy(ImplementationAddress, data));
+        proxyAddress = payable(address(new ERC1967Proxy(ImplementationAddress, data)));
+
+        messaging = Messaging(proxyAddress);
+        messaging.setZKSyncAddress(vm.envAddress("zkRouter"));
+
         vm.stopBroadcast();
     }
 }

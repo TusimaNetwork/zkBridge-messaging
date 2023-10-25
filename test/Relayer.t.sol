@@ -145,9 +145,9 @@ contract RelayerTest is Test {
 
         UUPSProxy proxy = new UUPSProxy(address(targetImplementation), "");
 
-        relayer = Messaging(address(proxy));
+        relayer = Messaging(payable(address(proxy)));
         WrappedInitialize.init(
-            address(relayer),
+            payable(address(relayer)),
             messageParams.SOURCE_CHAIN,
             address(lightClientMock),
             messageParams.sourceSenderAddress,

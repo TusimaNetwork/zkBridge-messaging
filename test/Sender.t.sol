@@ -30,9 +30,9 @@ contract SenderTest is Test {
         Messaging sourceImplementation = new Messaging();
         UUPSProxy proxy = new UUPSProxy(address(sourceImplementation), "");
 
-        wrappedSourceProxy = Messaging(address(proxy));
+        wrappedSourceProxy = Messaging(payable(address(proxy)));
         WrappedInitialize.init(
-            address(wrappedSourceProxy),
+            payable(address(wrappedSourceProxy)),
             uint32(block.chainid),
             makeAddr("lightclient"),
             makeAddr("source"),

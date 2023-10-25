@@ -57,4 +57,9 @@ contract Messaging is Sender, Relayer, MessagingAccess, UUPSUpgradeable {
 
     /// @notice Authorizes an upgrade for the implementation contract.
     function _authorizeUpgrade(address newImplementation) internal override onlyTimelock {}
+
+    event Received(address, uint);
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
 }

@@ -5,7 +5,7 @@ import {Messaging} from "src/Messaging.sol";
 
 library WrappedInitialize {
     function init(
-        address target,
+        address payable target,
         uint32 sourceChainId,
         address lightClient,
         address broadcaster,

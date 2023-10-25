@@ -65,7 +65,7 @@ contract Sender is ZkSyncMessaging, ISender {
 
         // zkSync l2 -> l1
         if (block.chainid == 280 && targetChainId == 5) {
-            bytes32 messageHash = zkSyncL2ToL1(_message);
+            zkSyncL2ToL1(_message);
         }
 
         emit SendMsg(nonce++, messageRoot, _message);

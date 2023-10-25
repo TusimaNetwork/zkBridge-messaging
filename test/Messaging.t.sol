@@ -43,7 +43,7 @@ contract MessagingTest is Test {
         address[] memory broadcasters = new address[](1);
         broadcasters[0] = address(this);
 
-        Messaging(address(proxy)).initialize(
+        Messaging(payable(address(proxy))).initialize(
             sourceChainIds,
             lightClients,
             broadcasters,
@@ -52,6 +52,36 @@ contract MessagingTest is Test {
             true
         );
     }
+
+    /*
+    function test_withdrow() public {
+        Messaging implementation = new Messaging();
+        UUPSProxy proxy = new UUPSProxy(address(implementation), "");
+
+        uint32[] memory sourceChainIds = new uint32[](1);
+        sourceChainIds[0] = 1;
+        address[] memory lightClients = new address[](1);
+        lightClients[0] = address(this);
+        address[] memory broadcasters = new address[](1);
+        broadcasters[0] = address(this);
+
+        Messaging(payable(address(proxy))).initialize(
+            sourceChainIds,
+            lightClients,
+            broadcasters,
+            address(this),
+            address(this),
+            true
+        );
+
+        vm.deal(address(proxy), 1 ether);
+        Messaging messaging = Messaging(payable(address(proxy)));
+        messaging.withdraw(address(1),1 ether);
+        assertTrue(
+            address(1).balance ==1 ether
+        );
+    }
+    */
 }
 
 contract MessagingUpgradeableTest is Test {
@@ -69,10 +99,10 @@ contract MessagingUpgradeableTest is Test {
         proxy = new UUPSProxy(address(router), "");
         setUpTimelock();
 
-        wrappedRouterProxy = Messaging(address(proxy));
+        wrappedRouterProxy = Messaging(payable(address(proxy)));
 
         WrappedInitialize.init(
-            address(wrappedRouterProxy),
+            payable(address(wrappedRouterProxy)),
             uint32(block.chainid),
             makeAddr("lightclient"),
             makeAddr("sourceAMB"),

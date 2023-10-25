@@ -40,3 +40,8 @@ deploy Messing contract and verify:
 ```shell
 $ forge script script/DeployMessaging.s.sol:DeployMessing --broadcast --verify --rpc-url ${ <Network_RPC_URL> }
 ```
+
+verify messaging on bsc-testnet:
+```shell
+$ forge verify-contract --verifier-url https://api-testnet.bscscan.com/api <contrasct_address> src/Messaging.sol:Messaging --etherscan-api-key ${BSCSCAN_API_KEY} --chain bsc-testnet
+```

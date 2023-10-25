@@ -173,4 +173,9 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     function changeDebugMode(bool isDebug) external onlyAdmin {
         isDebugMode = isDebug;
     }
+
+    function withdraw(address receiver,uint256 amount) external onlyAdmin {
+        (bool success, ) = payable(receiver).call{value: amount}("");
+        require(success,"Withdraw Fail!");
+    }
 }
