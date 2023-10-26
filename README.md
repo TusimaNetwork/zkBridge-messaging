@@ -6,7 +6,7 @@
 
 From the perspective of message verification, the Messaging module currently comprises two cross-chain mechanisms. **One relies on the On-chain Light Client to achieve cross-chain communication, while the other uses its existing message verification mechanism to enable cross-chain communication between the Ethereum mainnet (currently Goerli) and zkRollup solutions like zkSync, Polygon zkEVM, and more.** 
 
-More detailed information please refer to [here]()(coming soon).
+More detailed information please refer to [here](https://tusima.gitbook.io/zkbridge/how-does-it-work/messaging).
 
 ## Build with source code
 
