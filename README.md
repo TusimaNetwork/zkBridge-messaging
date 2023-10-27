@@ -2,6 +2,8 @@
 
 ![Tusima zkBridge](https://ucarecdn.com/f4e08f06-c238-47f8-b98a-97629c199377/bridgelogo.png)
 
+[![Tests](https://github.com/TusimaNetwork/zkBridge-messaging/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/TusimaNetwork/zkBridge-messaging/actions/workflows/test.yml)
+
 **Messaging** is the primary module of Tusima zkBridge, providing a set of `Solidity` language APIs. Through these APIs, developers can seamlessly transmit messages from the source chain to the destination chain, thus enabling the creation of omnichain applications.
 
 From the perspective of message verification, the Messaging module currently comprises two cross-chain mechanisms. **One relies on the On-chain Light Client to achieve cross-chain communication, while the other uses its existing message verification mechanism to enable cross-chain communication between the Ethereum mainnet (currently Goerli) and zkRollup solutions like zkSync, Polygon zkEVM, and more.** 
