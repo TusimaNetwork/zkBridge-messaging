@@ -3,7 +3,7 @@ pragma solidity 0.8.16;
 
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-import { ILightClientGetter as ILightClient } from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
+import {ILightClientGetter as ILightClient} from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
 
 contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
@@ -133,36 +133,43 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         msgRelayer[_relayer] = _isTrue;
     }
 
-    function setChainRouter(uint32 _chainId, address _routerAddress) external onlyAdmin {
+    function setChainRouter(
+        uint32 _chainId,
+        address _routerAddress
+    ) external onlyAdmin {
         chainRouter[_chainId] = _routerAddress;
     }
 
-    function setZKSyncAddress(address _zkSyncAddress) external onlyAdmin {
+    function setZKSync(
+        address _zkSyncAddress,
+        uint256 _l2Value,
+        uint256 _gasLimit,
+        uint256 _byteLimit,
+        bytes[] memory _factoryDeps,
+        address _recipient,
+        uint256 _value
+    ) external onlyAdmin {
         zkSyncAddress = _zkSyncAddress;
-    }
-
-    function setZkSyncL2Value(uint256 _l2Value) external onlyAdmin {
         zkSyncL2Value = _l2Value;
-    }
-
-    function setZkSyncGasLimit(uint256 _gasLimit) external onlyAdmin{
         zkSyncL2GasLimit = _gasLimit;
+        zkSyncL2GasPerPubdataByteLimit = _byteLimit;
+        zkSyncFactoryDeps = _factoryDeps;
+        zkSyncRefundRecipient = _recipient;
+        zkSyncToL2Value = _value;
     }
 
-    function setZkSyncL2GasPerPubdataByteLimit(uint256 byteLimit) external onlyAdmin {
-        zkSyncL2GasPerPubdataByteLimit = byteLimit;
-    }
-
-    function setZkSyncFactoryDeps(bytes[] memory value) external onlyAdmin {
-        zkSyncFactoryDeps = value;
-    }
-
-    function setZkSyncRefundRecipient(address recipient) external onlyAdmin {
-        zkSyncRefundRecipient = recipient;
-    }
-
-    function setZkSyncToL2Value(uint256 value) external onlyAdmin {
-        zkSyncToL2Value = value;
+    function setScroll(
+        address _scrollL1Messager,
+        address _scrollL2Messager,
+        uint256 _scrollL2GasLimit,
+        address _l1RefundAddress,
+        address _l2RefundAddress
+    ) external onlyAdmin {
+        scrollL1Messager = _scrollL1Messager;
+        scrollL2Messager = _scrollL2Messager;
+        scrollL2GasLimit = _scrollL2GasLimit;
+        l1RefundAddress = _l1RefundAddress;
+        l2RefundAddress = _l2RefundAddress;
     }
 
     /*
@@ -174,8 +181,8 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         isDebugMode = isDebug;
     }
 
-    function withdraw(address receiver,uint256 amount) external onlyAdmin {
+    function withdraw(address receiver, uint256 amount) external onlyAdmin {
         (bool success, ) = payable(receiver).call{value: amount}("");
-        require(success,"Withdraw Fail!");
+        require(success, "Withdraw Fail!");
     }
 }

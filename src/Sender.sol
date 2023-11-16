@@ -8,23 +8,20 @@ import {Bytes32} from "./libraries/Typecast.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 import {ISender, Message} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
-import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
+import {ScrollMessaging} from "./ScrollMessaging.sol";
 
-import {IZkSync} from "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
-import "v2-testnet-contracts/l2/system-contracts/Constants.sol";
+// import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
+// import {IZkSync} from "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
+// import "v2-testnet-contracts/l2/system-contracts/Constants.sol";
 
 /// @title Source Arbitrary Message Bridge
 /// @author Succinct Labs
 /// @notice This contract is the entrypoint for sending messages to other chains.
-contract Sender is ZkSyncMessaging, ISender {
+contract Sender is ScrollMessaging, ISender {
     error SendingDisabled();
     error CannotSendToSameChain();
 
-    event SendMsg(
-        uint64 indexed nonce,
-        bytes32 indexed msgHash,
-        bytes message
-    );
+    event SendMsg(uint64 indexed nonce, bytes32 indexed msgHash, bytes message);
 
     event SendZkSyncMsgL1ToL2(
         uint64 indexed nonce,
@@ -45,7 +42,6 @@ contract Sender is ZkSyncMessaging, ISender {
         address targetAddr,
         bytes calldata message
     ) external override isSendingEnabled returns (bytes32) {
-
         // TODO add limit for supporting chain
 
         if (targetChainId == block.chainid) revert CannotSendToSameChain();
@@ -57,6 +53,8 @@ contract Sender is ZkSyncMessaging, ISender {
         messages[nonce] = messageRoot;
 
         // zkSync l1 -> l2
+
+        /*
         if (block.chainid == 5 && targetChainId == 280) {
             zkSyncL1ToL2(_message, chainRouter[targetChainId]);
             emit SendZkSyncMsgL1ToL2(nonce++, messageRoot, _message);
@@ -66,6 +64,17 @@ contract Sender is ZkSyncMessaging, ISender {
         // zkSync l2 -> l1
         if (block.chainid == 280 && targetChainId == 5) {
             zkSyncL2ToL1(_message);
+        }
+        */
+
+        // scroll l1 -> l2
+        if (block.chainid == 11155111 && targetChainId == 534351) {
+            scrollL1ToL2(_message, chainRouter[targetChainId]);
+        }
+
+        // scroll l2 -> l1
+        if (block.chainid == 534351 && targetChainId == 11155111) {
+            scrollL2ToL1(_message, chainRouter[targetChainId]);
         }
 
         emit SendMsg(nonce++, messageRoot, _message);

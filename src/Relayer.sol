@@ -12,12 +12,16 @@ import {IReceiver, IRelayer, Message, MessageStatus} from "zkBridge-messaging-in
 
 import "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
 
+import {IScroll} from "./interfaces/IScrollInterface.sol";
+import {IScrollMessenger,L2MessageProof,IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
+
 /// @title Relayer contract
 /// @notice Relay messages from source chain to current chain.
 contract Relayer is
     MessagingStorage,
     ReentrancyGuardUpgradeable,
-    IRelayer
+    IRelayer,
+    IScroll
 {
     /// @notice The minimum delay for using any information from the light client.
     uint256 public constant MIN_LIGHT_CLIENT_DELAY = 2 minutes;
@@ -48,7 +52,9 @@ contract Relayer is
         bytes[] calldata accountProof,
         bytes[] calldata storageProof
     ) external override nonReentrant {
-        (Message memory message, bytes32 messageRoot) = _checkPreconditions(messageBytes);
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
         // requireLightClientConsistency(message.sourceChainId);
         requireNotFrozen(message.sourceChainId);
 
@@ -57,17 +63,26 @@ contract Relayer is
 
             bytes32 storageRoot;
             bytes32 cacheKey = keccak256(
-                abi.encodePacked(message.sourceChainId, slot, broadcasters[message.sourceChainId])
+                abi.encodePacked(
+                    message.sourceChainId,
+                    slot,
+                    broadcasters[message.sourceChainId]
+                )
             );
 
             // If the cache is empty for the cacheKey, then we get the
             // storageRoot using the provided accountProof.
             if (storageRootCache[cacheKey] == 0) {
-                bytes32 executionStateRoot =
-                    lightClients[message.sourceChainId].executionStateRoot(slot);
-                require(executionStateRoot != 0, "Execution State Root is not set");
+                bytes32 executionStateRoot = lightClients[message.sourceChainId]
+                    .executionStateRoot(slot);
+                require(
+                    executionStateRoot != 0,
+                    "Execution State Root is not set"
+                );
                 storageRoot = StorageProof.getStorageRoot(
-                    accountProof, broadcasters[message.sourceChainId], executionStateRoot
+                    accountProof,
+                    broadcasters[message.sourceChainId],
+                    executionStateRoot
                 );
                 storageRootCache[cacheKey] = storageRoot;
             } else {
@@ -75,9 +90,20 @@ contract Relayer is
             }
 
             bytes32 slotKey = keccak256(
-                abi.encode(keccak256(abi.encode(message.nonce, MESSAGES_MAPPING_STORAGE_INDEX)))
+                abi.encode(
+                    keccak256(
+                        abi.encode(
+                            message.nonce,
+                            MESSAGES_MAPPING_STORAGE_INDEX
+                        )
+                    )
+                )
             );
-            uint256 slotValue = StorageProof.getStorageValue(slotKey, storageRoot, storageProof);
+            uint256 slotValue = StorageProof.getStorageValue(
+                slotKey,
+                storageRoot,
+                storageProof
+            );
 
             if (bytes32(slotValue) != messageRoot) {
                 revert("Invalid message hash.");
@@ -101,40 +127,79 @@ contract Relayer is
 
     // zkSync --> layer 1
     function vMsgZkSyncL2ToL1(
-        address _someSender,
+        address someSender,
         // zkSync block number in which the message was sent
-        uint256 _l1BatchNumber,
+        uint256 l1BatchNumber,
         // Message index, that can be received via API
-        uint256 _proofId,
+        uint256 proofId,
         // The tx number in block
-        uint16 _trxIndex,
+        uint16 trxIndex,
         // The message that was sent from l2
-        bytes calldata _messageBytes,
+        bytes calldata messageBytes,
         // Merkle proof for the message
-        bytes32[] calldata _proof
+        bytes32[] calldata proof
     ) external override nonReentrant {
-        require(msgRelayer[msg.sender],"Wrong Sender!");
+        require(msgRelayer[msg.sender], "Wrong Sender!");
         (Message memory message, bytes32 messageRoot) = _checkPreconditions(
-            _messageBytes
+            messageBytes
         );
 
         IZkSync zksync = IZkSync(zkSyncAddress);
         L2Message memory l2Message = L2Message({
-            txNumberInBlock: _trxIndex,
-            sender: _someSender,
-            data: _messageBytes
+            txNumberInBlock: trxIndex,
+            sender: someSender,
+            data: messageBytes
         });
 
         bool success = zksync.proveL2MessageInclusion(
-            _l1BatchNumber,
-            _proofId,
+            l1BatchNumber,
+            proofId,
             l2Message,
-            _proof
+            proof
         );
 
         require(success, "Failed to prove message inclusion");
 
-        _executeMessage(message, messageRoot, _messageBytes);
+        _executeMessage(message, messageRoot, messageBytes);
+    }
+
+    // scroll --> layer 1 to l2
+    function vMsgScrollL1ToL2(
+        bytes calldata messageBytes
+    ) external override nonReentrant {
+        require(msgRelayer[msg.sender], "Wrong Sender!");
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
+
+        _executeMessage(message, messageRoot, messageBytes);
+    }
+
+    // scroll --> layer 2 to l1
+    function vMsgScrollL2ToL1(
+        uint256 nonce,
+        uint256 batchIndex,
+        bytes calldata proof,
+        bytes calldata messageBytes
+    ) external override nonReentrant {
+        require(msgRelayer[msg.sender], "Wrong Sender!");
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
+
+        IL1ScrollMessenger scrollMessenger = IL1ScrollMessenger(
+            scrollL1Messager
+        );
+        scrollMessenger.relayMessageWithProof(
+            broadcasters[message.sourceChainId],
+            address(this),
+            0,
+            nonce,
+            messageBytes,
+            L2MessageProof(batchIndex, proof)
+        );
+
+        _executeMessage(message, messageRoot, messageBytes);
     }
 
     /// @notice Executes a message and updates storage with status and emits an event.
@@ -202,8 +267,7 @@ contract Relayer is
             revert("Wrong chain.");
         } else if (message.version != version) {
             revert("Wrong version.");
-        } 
-        else if (
+        } else if (
             address(lightClients[message.sourceChainId]) == address(0) ||
             broadcasters[message.sourceChainId] == address(0)
         ) {

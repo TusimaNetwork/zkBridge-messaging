@@ -4,16 +4,18 @@ out = "out"
 libs = ["lib"]
 solc_version = "0.8.16"
 auto_detect_solc = true
-auto_detect_remappings = false
+auto_detect_remappings = true
 ffi = true
 via_ir = true
+optimizer = true
+optimizer_runs = 100
 fs_permissions = [{ access = "read", path = "./"}]
 
 [rpc_endpoints]
 bsc-testnet= "${BSCTEST_RPC_URL}"
 goerli = "${GOERLI_RPC_URL}"
 sepolia = "${SEPOLIA_RPC_URL}"
-zkevm = "${ZKEVM_RPC_URL}"
+scroll = "${SEPOLIASCROLL_RPC_URL}"
 
 
 [etherscan]

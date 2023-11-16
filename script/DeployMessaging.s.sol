@@ -31,10 +31,6 @@ contract DeployMessing is Script {
             )
         );
         proxyAddress = payable(address(new ERC1967Proxy(ImplementationAddress, data)));
-
-        messaging = Messaging(proxyAddress);
-        messaging.setZKSyncAddress(vm.envAddress("zkRouter"));
-
         vm.stopBroadcast();
     }
 }

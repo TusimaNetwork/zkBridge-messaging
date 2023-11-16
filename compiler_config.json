@@ -1,0 +1,38 @@
+{
+    "language": "Solidity",
+    "settings": {
+        "optimizer": {
+            "enabled": true,
+            "runs": 100
+        },
+		"viaIR": true,
+        "outputSelection": {
+            "*": {
+                "": ["ast"],
+                "*": [
+                    "abi",
+                    "metadata",
+                    "devdoc",
+                    "userdoc",
+                    "storageLayout",
+                    "evm.legacyAssembly",
+                    "evm.bytecode",
+                    "evm.deployedBytecode",
+                    "evm.methodIdentifiers",
+                    "evm.gasEstimates",
+                    "evm.assembly"
+                ]
+            }
+        },
+        "remappings": [
+            "ds-test/=lib/forge-std/lib/ds-test/src/",
+            "forge-std/=lib/forge-std/src/",
+            "zkBridge-messaging-interfaces/=lib/zkBridge-messaging-interfaces/",
+            "zkBridge-lightClient/=lib/zkBridge-lightClient/",
+            "v2-testnet-contracts/=lib/v2-testnet-contracts/",
+            "optimism-bedrock-contracts/=lib/optimism-bedrock-contracts/",
+            "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+            "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
+        ]
+    }
+}
