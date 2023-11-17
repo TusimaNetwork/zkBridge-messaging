@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 import {Bytes32} from "./libraries/Typecast.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 import {ISender, Message} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
 import {ScrollMessaging} from "./ScrollMessaging.sol";
+import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
 
 // import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
 // import {IZkSync} from "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
@@ -17,7 +15,7 @@ import {ScrollMessaging} from "./ScrollMessaging.sol";
 /// @title Source Arbitrary Message Bridge
 /// @author Succinct Labs
 /// @notice This contract is the entrypoint for sending messages to other chains.
-contract Sender is ScrollMessaging, ISender {
+contract Sender is ScrollMessaging,ZkSyncMessaging,ISender {
     error SendingDisabled();
     error CannotSendToSameChain();
 
@@ -54,7 +52,6 @@ contract Sender is ScrollMessaging, ISender {
 
         // zkSync l1 -> l2
 
-        /*
         if (block.chainid == 5 && targetChainId == 280) {
             zkSyncL1ToL2(_message, chainRouter[targetChainId]);
             emit SendZkSyncMsgL1ToL2(nonce++, messageRoot, _message);
@@ -65,7 +62,6 @@ contract Sender is ScrollMessaging, ISender {
         if (block.chainid == 280 && targetChainId == 5) {
             zkSyncL2ToL1(_message);
         }
-        */
 
         // scroll l1 -> l2
         if (block.chainid == 11155111 && targetChainId == 534351) {

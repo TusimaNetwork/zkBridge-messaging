@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {ILightClientGetter as ILightClient} from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
 
-contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
+contract MessagingAccess is MessagingStorage, Ownable {
     /// @notice Emitted when the sendingEnabled flag is changed.
     event SendingEnabled(bool enabled);
 
@@ -32,38 +32,8 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Emitted when a new source chain is added.
     event SourceChainAdded(uint32 indexed chainId);
 
-    /// @notice A random constant used to identify addresses with the permission of a 'guardian'.
-    bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
-
-    /// @notice A random constant used to identify addresses with the permission of a 'timelock'.
-    bytes32 public constant TIMELOCK_ROLE = keccak256("TIMELOCK_ROLE");
-
-    modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "MessagingAccess: only admin can call this function"
-        );
-        _;
-    }
-
-    modifier onlyTimelock() {
-        require(
-            hasRole(TIMELOCK_ROLE, msg.sender),
-            "MessagingAccess: only timelock can call this function"
-        );
-        _;
-    }
-
-    modifier onlyGuardian() {
-        require(
-            hasRole(GUARDIAN_ROLE, msg.sender),
-            "MessagingAccess: only guardian can call this function"
-        );
-        _;
-    }
-
     /// @notice Allows the owner to control whether sending is enabled or not.
-    function setSendingEnabled(bool enabled) external onlyGuardian {
+    function setSendingEnabled(bool enabled) external onlyOwner {
         sendingEnabled = enabled;
         emit SendingEnabled(enabled);
     }
@@ -71,7 +41,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Freezes messages from all chains.
     /// @dev This is a safety mechanism to prevent the contract from being used after a security
     ///      vulnerability is detected.
-    function freezeAll() external onlyGuardian {
+    function freezeAll() external onlyOwner {
         for (uint32 i = 0; i < sourceChainIds.length; i++) {
             frozen[sourceChainIds[i]] = true;
         }
@@ -81,7 +51,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Freezes messages from the specified chain.
     /// @dev This is a safety mechanism to prevent the contract from being used after a security
     ///      vulnerability is detected.
-    function freeze(uint32 chainId) external onlyGuardian {
+    function freeze(uint32 chainId) external onlyOwner {
         frozen[chainId] = true;
         emit Freeze(chainId);
     }
@@ -89,7 +59,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Unfreezes messages from the specified chain.
     /// @dev This is a safety mechanism to continue usage of the contract after a security
     ///      vulnerability is patched.
-    function unfreeze(uint32 chainId) external onlyGuardian {
+    function unfreeze(uint32 chainId) external onlyOwner {
         frozen[chainId] = false;
         emit Unfreeze(chainId);
     }
@@ -97,7 +67,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Unfreezes messages from all chains.
     /// @dev This is a safety mechanism to continue usage of the contract after a security
     ///      vulnerability is patched.
-    function unfreezeAll() external onlyGuardian {
+    function unfreezeAll() external onlyOwner {
         for (uint32 i = 0; i < sourceChainIds.length; i++) {
             frozen[sourceChainIds[i]] = false;
         }
@@ -112,7 +82,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         uint32 chainId,
         address lightclient,
         address broadcaster
-    ) external onlyTimelock {
+    ) external onlyOwner {
         bool chainIdExists = false;
         for (uint256 i = 0; i < sourceChainIds.length; i++) {
             if (sourceChainIds[i] == chainId) {
@@ -129,14 +99,14 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         emit SetLightClientAndBroadcaster(chainId, lightclient, broadcaster);
     }
 
-    function setRelayer(address _relayer, bool _isTrue) external onlyAdmin {
+    function setRelayer(address _relayer, bool _isTrue) external onlyOwner {
         msgRelayer[_relayer] = _isTrue;
     }
 
     function setChainRouter(
         uint32 _chainId,
         address _routerAddress
-    ) external onlyAdmin {
+    ) external onlyOwner {
         chainRouter[_chainId] = _routerAddress;
     }
 
@@ -148,7 +118,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         bytes[] memory _factoryDeps,
         address _recipient,
         uint256 _value
-    ) external onlyAdmin {
+    ) external onlyOwner {
         zkSyncAddress = _zkSyncAddress;
         zkSyncL2Value = _l2Value;
         zkSyncL2GasLimit = _gasLimit;
@@ -164,7 +134,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
         uint256 _scrollL2GasLimit,
         address _l1RefundAddress,
         address _l2RefundAddress
-    ) external onlyAdmin {
+    ) external onlyOwner {
         scrollL1Messager = _scrollL1Messager;
         scrollL2Messager = _scrollL2Messager;
         scrollL2GasLimit = _scrollL2GasLimit;
@@ -177,11 +147,11 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
      * @return {*}
      * @param {bool} isDebug
      */
-    function changeDebugMode(bool isDebug) external onlyAdmin {
+    function changeDebugMode(bool isDebug) external onlyOwner {
         isDebugMode = isDebug;
     }
 
-    function withdraw(address receiver, uint256 amount) external onlyAdmin {
+    function withdraw(address receiver, uint256 amount) external onlyOwner {
         (bool success, ) = payable(receiver).call{value: amount}("");
         require(success, "Withdraw Fail!");
     }

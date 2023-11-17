@@ -1,28 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import {StorageProof, EventProof} from "./libraries/StateProofHelper.sol";
+import {StorageProof} from "./libraries/StateProofHelper.sol";
 import {Address} from "./libraries/Typecast.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 
 import {MessagingStorage} from "./MessagingStorage.sol";
 import {IReceiver, IRelayer, Message, MessageStatus} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 
-import "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
+import {IZkSync, L2Message} from "./interfaces/IZkSync.sol";
 
 import {IScroll} from "./interfaces/IScrollInterface.sol";
-import {IScrollMessenger,L2MessageProof,IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
+import {IScrollMessenger, L2MessageProof, IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
 
 /// @title Relayer contract
 /// @notice Relay messages from source chain to current chain.
-contract Relayer is
-    MessagingStorage,
-    ReentrancyGuardUpgradeable,
-    IRelayer,
-    IScroll
-{
+contract Relayer is MessagingStorage, ReentrancyGuard, IRelayer, IScroll {
     /// @notice The minimum delay for using any information from the light client.
     uint256 public constant MIN_LIGHT_CLIENT_DELAY = 2 minutes;
 
