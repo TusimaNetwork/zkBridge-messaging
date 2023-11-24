@@ -7,6 +7,7 @@ import {ISender, Message} from "zkBridge-messaging-interfaces/src/interfaces/IMe
 import {MessagingStorage} from "./MessagingStorage.sol";
 import {ScrollMessaging} from "./ScrollMessaging.sol";
 import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
+import {PolygonMessaging} from "./PolygonMessaging.sol";
 
 // import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
 // import {IZkSync} from "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
@@ -15,7 +16,7 @@ import {ZkSyncMessaging} from "./ZkSyncMessaging.sol";
 /// @title Source Arbitrary Message Bridge
 /// @author Succinct Labs
 /// @notice This contract is the entrypoint for sending messages to other chains.
-contract Sender is ScrollMessaging,ZkSyncMessaging,ISender {
+contract Sender is ScrollMessaging, ZkSyncMessaging, PolygonMessaging, ISender {
     error SendingDisabled();
     error CannotSendToSameChain();
 
@@ -53,7 +54,7 @@ contract Sender is ScrollMessaging,ZkSyncMessaging,ISender {
         // zkSync l1 -> l2
 
         if (block.chainid == 5 && targetChainId == 280) {
-            zkSyncL1ToL2(_message, chainRouter[targetChainId]);
+            zkSyncL1ToL2(_message, broadcasters[targetChainId]);
             emit SendZkSyncMsgL1ToL2(nonce++, messageRoot, _message);
             return messageRoot;
         }
@@ -65,12 +66,22 @@ contract Sender is ScrollMessaging,ZkSyncMessaging,ISender {
 
         // scroll l1 -> l2
         if (block.chainid == 11155111 && targetChainId == 534351) {
-            scrollL1ToL2(_message, chainRouter[targetChainId]);
+            scrollL1ToL2(_message, broadcasters[targetChainId]);
         }
 
         // scroll l2 -> l1
         if (block.chainid == 534351 && targetChainId == 11155111) {
-            scrollL2ToL1(_message, chainRouter[targetChainId]);
+            scrollL2ToL1(_message, broadcasters[targetChainId]);
+        }
+
+        // polygon l1 -> l2
+        if (block.chainid == 5 && targetChainId == 1442) {
+            polygonL1ToL2(_message, broadcasters[targetChainId]);
+        }
+
+        // polygon l2 -> l1
+        if (block.chainid == 1442 && targetChainId == 5) {
+            polygonL2ToL1(_message, broadcasters[targetChainId]);
         }
 
         emit SendMsg(nonce++, messageRoot, _message);
@@ -98,5 +109,9 @@ contract Sender is ScrollMessaging,ZkSyncMessaging,ISender {
             message
         );
         messageRoot = keccak256(messageBytes);
+
+        if (block.chainid != 280 && broadcasters[targetChainId] == address(0)) {
+            revert("broadcasterfor source chain is not set");
+        }
     }
 }

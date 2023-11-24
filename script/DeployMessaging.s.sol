@@ -11,6 +11,8 @@ contract DeployMessing is Script {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         messaging = new Messaging(vm.envBool("sendingEnabled"));
 
+        messaging.setRelayer(msg.sender, true);
+
         vm.stopBroadcast();
     }
 }

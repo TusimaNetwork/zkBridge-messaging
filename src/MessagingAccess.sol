@@ -23,11 +23,11 @@ contract MessagingAccess is MessagingStorage, Ownable {
     event Unfreeze(uint32 indexed chainId);
 
     /// @notice Emitted when setLightClientAndBroadcaster is called.
-    event SetLightClientAndBroadcaster(
-        uint32 indexed chainId,
-        address lightClient,
-        address broadcaster
-    );
+    // event SetLightClientAndBroadcaster(
+    //     uint32 indexed chainId,
+    //     address lightClient,
+    //     address broadcaster
+    // );
 
     /// @notice Emitted when a new source chain is added.
     event SourceChainAdded(uint32 indexed chainId);
@@ -78,36 +78,47 @@ contract MessagingAccess is MessagingStorage, Ownable {
     /// @dev This is controlled by the timelock as it is a potentially dangerous method
     ///      since both the light client and broadcaster address are critical in verifying
     ///      that only valid sent messages are executed.
-    function setLightClientAndBroadcaster(
-        uint32 chainId,
-        address lightclient,
-        address broadcaster
+    // function setLightClientAndBroadcaster(
+    //     uint32 chainId,
+    //     address lightclient,
+    //     address broadcaster
+    // ) external onlyOwner {
+    //     bool chainIdExists = false;
+    //     for (uint256 i = 0; i < sourceChainIds.length; i++) {
+    //         if (sourceChainIds[i] == chainId) {
+    //             chainIdExists = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!chainIdExists) {
+    //         sourceChainIds.push(chainId);
+    //         emit SourceChainAdded(chainId);
+    //     }
+    //     lightClients[chainId] = ILightClient(lightclient);
+    //     broadcasters[chainId] = broadcaster;
+    //     emit SetLightClientAndBroadcaster(chainId, lightclient, broadcaster);
+    // }
+
+    function setLightClient(
+        uint32[] memory chainIds,
+        address[] memory lightclient
     ) external onlyOwner {
-        bool chainIdExists = false;
-        for (uint256 i = 0; i < sourceChainIds.length; i++) {
-            if (sourceChainIds[i] == chainId) {
-                chainIdExists = true;
-                break;
-            }
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            lightClients[chainIds[i]] = ILightClient(lightclient[i]);
         }
-        if (!chainIdExists) {
-            sourceChainIds.push(chainId);
-            emit SourceChainAdded(chainId);
+    }
+
+    function setBroadcaster(
+        uint32[] memory chainIds,
+        address[] memory broadcaster
+    ) external onlyOwner {
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            broadcasters[chainIds[i]] = broadcaster[i];
         }
-        lightClients[chainId] = ILightClient(lightclient);
-        broadcasters[chainId] = broadcaster;
-        emit SetLightClientAndBroadcaster(chainId, lightclient, broadcaster);
     }
 
     function setRelayer(address _relayer, bool _isTrue) external onlyOwner {
         msgRelayer[_relayer] = _isTrue;
-    }
-
-    function setChainRouter(
-        uint32 _chainId,
-        address _routerAddress
-    ) external onlyOwner {
-        chainRouter[_chainId] = _routerAddress;
     }
 
     function setZKSync(
@@ -132,14 +143,20 @@ contract MessagingAccess is MessagingStorage, Ownable {
         address _scrollL1Messager,
         address _scrollL2Messager,
         uint256 _scrollL2GasLimit,
-        address _l1RefundAddress,
-        address _l2RefundAddress
+        address _rollupAddress
     ) external onlyOwner {
         scrollL1Messager = _scrollL1Messager;
         scrollL2Messager = _scrollL2Messager;
         scrollL2GasLimit = _scrollL2GasLimit;
-        l1RefundAddress = _l1RefundAddress;
-        l2RefundAddress = _l2RefundAddress;
+        rollupAddress = _rollupAddress;
+    }
+
+    function setPolygon(
+        address _polygonL1Messager,
+        address _polugonL2Messager
+    ) external onlyOwner {
+        polygonL1Messager = _polygonL1Messager;
+        polygonL2Messager = _polugonL2Messager;
     }
 
     /*

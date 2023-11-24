@@ -2,7 +2,7 @@
 pragma solidity 0.8.16;
 
 import {MessagingStorage} from "./MessagingStorage.sol";
-import {IL1MessageQueue} from "./interfaces/IL1MessageQueue.sol";
+import {IL1MessageQueue} from "./interfaces/IScrollChain.sol";
 import {IScrollMessenger,IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
 
 contract ScrollMessaging is MessagingStorage {
@@ -31,7 +31,7 @@ contract ScrollMessaging is MessagingStorage {
             0,
             _calldata,
             scrollL2GasLimit,
-            l2RefundAddress
+            target
         );
     }
 
@@ -48,8 +48,7 @@ contract ScrollMessaging is MessagingStorage {
             target,
             0,
             messageBytes,
-            scrollL2GasLimit,
-            l1RefundAddress
+            0
         );
     }
 }

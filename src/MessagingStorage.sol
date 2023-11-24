@@ -60,8 +60,6 @@ contract MessagingStorage {
 
     mapping(address => bool) public msgRelayer;
 
-    mapping(uint32 => address) public chainRouter;
-
     address public zkSyncAddress; 
     uint256 public zkSyncL2Value;
     uint256 public zkSyncL2GasLimit;
@@ -73,8 +71,8 @@ contract MessagingStorage {
     address public scrollL1Messager;
     address public scrollL2Messager;
     uint256 public scrollL2GasLimit;
-    address public l1RefundAddress;
-    address public l2RefundAddress;
+    address public rollupAddress;
 
-    
+    address public polygonL1Messager;
+    address public polygonL2Messager;    
 }

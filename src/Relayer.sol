@@ -5,6 +5,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 
 import {StorageProof} from "./libraries/StateProofHelper.sol";
 import {Address} from "./libraries/Typecast.sol";
+import {WithdrawTrieVerifier} from "./libraries/WithdrawTrieVerifier.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 
 import {MessagingStorage} from "./MessagingStorage.sol";
@@ -12,12 +13,21 @@ import {IReceiver, IRelayer, Message, MessageStatus} from "zkBridge-messaging-in
 
 import {IZkSync, L2Message} from "./interfaces/IZkSync.sol";
 
+import {IScrollChain} from "./interfaces/IScrollChain.sol";
+
 import {IScroll} from "./interfaces/IScrollInterface.sol";
-import {IScrollMessenger, L2MessageProof, IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
+import {IPolygonBridge, IPolygonInterface} from "./interfaces/IPolygon.sol";
+import {IScrollMessenger, IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
 
 /// @title Relayer contract
 /// @notice Relay messages from source chain to current chain.
-contract Relayer is MessagingStorage, ReentrancyGuard, IRelayer, IScroll {
+contract Relayer is
+    MessagingStorage,
+    ReentrancyGuard,
+    IRelayer,
+    IScroll,
+    IPolygonInterface
+{
     /// @notice The minimum delay for using any information from the light client.
     uint256 public constant MIN_LIGHT_CLIENT_DELAY = 2 minutes;
 
@@ -146,14 +156,14 @@ contract Relayer is MessagingStorage, ReentrancyGuard, IRelayer, IScroll {
             data: messageBytes
         });
 
-        bool success = zksync.proveL2MessageInclusion(
+        bool passVerify = zksync.proveL2MessageInclusion(
             l1BatchNumber,
             proofId,
             l2Message,
             proof
         );
 
-        require(success, "Failed to prove message inclusion");
+        require(passVerify, "Failed to prove message inclusion");
 
         _executeMessage(message, messageRoot, messageBytes);
     }
@@ -182,18 +192,89 @@ contract Relayer is MessagingStorage, ReentrancyGuard, IRelayer, IScroll {
             messageBytes
         );
 
-        IL1ScrollMessenger scrollMessenger = IL1ScrollMessenger(
-            scrollL1Messager
-        );
-        scrollMessenger.relayMessageWithProof(
-            broadcasters[message.sourceChainId],
-            address(this),
-            0,
-            nonce,
-            messageBytes,
-            L2MessageProof(batchIndex, proof)
+        bytes32 _xDomainCalldataHash = keccak256(
+            abi.encodeWithSignature(
+                "relayMessage(address,address,uint256,uint256,bytes)",
+                broadcasters[message.sourceChainId],
+                address(this),
+                0,
+                nonce,
+                messageBytes
+            )
         );
 
+        IScrollChain scrollChain = IScrollChain(rollupAddress);
+
+        require(
+            scrollChain.isBatchFinalized(batchIndex),
+            "Batch is not finalized"
+        );
+        bytes32 _messageTotalRoot = scrollChain.withdrawRoots(batchIndex);
+
+        bool passVerify = WithdrawTrieVerifier.verifyMerkleProof(
+            _messageTotalRoot,
+            _xDomainCalldataHash,
+            nonce,
+            proof
+        );
+        require(passVerify, "Failed to prove message inclusion");
+
+        _executeMessage(message, messageRoot, messageBytes);
+    }
+
+    // polygon --> layer l1 to l2
+    // polygon --> layer l2 to l1
+    function vMsgPolygon(
+        bytes32[32] calldata smtProof,
+        uint32 index,
+        bytes32 exitRoot,
+        bytes calldata messageBytes
+    ) external override nonReentrant {
+        require(msgRelayer[msg.sender], "Wrong Sender!");
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
+
+        uint8 leafType = 1;
+        uint256 amount = 0;
+
+        IPolygonBridge bridge;
+        uint32 originNetwork;
+        uint32 destinationNetwork;
+
+        //layer l2 to l1
+        if (block.chainid == 5) {
+            bridge = IPolygonBridge(polygonL1Messager);
+            originNetwork = 1;
+            destinationNetwork = 0;
+        }
+
+        //layer l1 to l2
+        if (block.chainid == 1442) {
+            bridge = IPolygonBridge(polygonL2Messager);
+            originNetwork = 0;
+            destinationNetwork = 1;
+        }
+
+        bytes32 leafValue = keccak256(
+            abi.encodePacked(
+                leafType,
+                originNetwork,
+                broadcasters[message.sourceChainId],
+                destinationNetwork,
+                address(this),
+                amount,
+                messageRoot
+            )
+        );
+
+        bool passVerify = bridge.verifyMerkleProof(
+            leafValue,
+            smtProof,
+            index,
+            exitRoot
+        );
+        require(passVerify, "Failed to prove message inclusion");
         _executeMessage(message, messageRoot, messageBytes);
     }
 
@@ -263,10 +344,12 @@ contract Relayer is MessagingStorage, ReentrancyGuard, IRelayer, IScroll {
         } else if (message.version != version) {
             revert("Wrong version.");
         } else if (
-            address(lightClients[message.sourceChainId]) == address(0) ||
-            broadcasters[message.sourceChainId] == address(0)
+            address(lightClients[message.sourceChainId]) == address(0) &&
+            uint32(block.chainid) == 97
         ) {
-            revert("Light client or broadcaster for source chain is not set");
+            revert("Light client for source chain is not set");
+        } else if (broadcasters[message.sourceChainId] == address(0)) {
+            revert("broadcasterfor source chain is not set");
         }
         return (message, messageRoot);
     }
