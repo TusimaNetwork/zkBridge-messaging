@@ -52,15 +52,14 @@ contract Sender is ScrollMessaging, ZkSyncMessaging, PolygonMessaging, ISender {
         messages[nonce] = messageRoot;
 
         // zkSync l1 -> l2
-
-        if (block.chainid == 5 && targetChainId == 280) {
+        if (block.chainid == 11155111 && targetChainId == 300) {
             zkSyncL1ToL2(_message, broadcasters[targetChainId]);
             emit SendZkSyncMsgL1ToL2(nonce++, messageRoot, _message);
             return messageRoot;
         }
 
         // zkSync l2 -> l1
-        if (block.chainid == 280 && targetChainId == 5) {
+        if (block.chainid == 300 && targetChainId == 11155111) {
             zkSyncL2ToL1(_message);
         }
 
@@ -110,7 +109,7 @@ contract Sender is ScrollMessaging, ZkSyncMessaging, PolygonMessaging, ISender {
         );
         messageRoot = keccak256(messageBytes);
 
-        if (block.chainid != 280 && broadcasters[targetChainId] == address(0)) {
+        if (broadcasters[targetChainId] == address(0)) {
             revert("broadcasterfor source chain is not set");
         }
     }

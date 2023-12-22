@@ -12,6 +12,7 @@ contract Messaging is Sender, Relayer, MessagingAccess {
     uint8 public constant VERSION = 1;
 
     constructor(bool _sendingEnabled) {
+        zkSyncAddress = 0x9A6DE0f62Aa270A8bCB1e2610078650D539B1Ef9;
         zkSyncL2Value = 0;
         zkSyncL2GasLimit = 2000000;
         zkSyncL2GasPerPubdataByteLimit = 800;

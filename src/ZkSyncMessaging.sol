@@ -21,7 +21,7 @@ contract ZkSyncMessaging is MessagingStorage {
             zkSyncL2GasLimit,
             zkSyncL2GasPerPubdataByteLimit,
             zkSyncFactoryDeps,
-            zkSyncRefundRecipient
+            routerAddr
         );
     }
 

@@ -222,8 +222,7 @@ contract Relayer is
         _executeMessage(message, messageRoot, messageBytes);
     }
 
-    // polygon --> layer l1 to l2
-    // polygon --> layer l2 to l1
+    // polygon --> l1 to l2 and l2 to l1
     function vMsgPolygon(
         bytes32[32] calldata smtProof,
         uint32 index,
