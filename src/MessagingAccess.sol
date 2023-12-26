@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import { ILightClientGetter as ILightClient } from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
+import {ILightClientGetter as ILightClient} from "zkBridge-messaging-interfaces/src/interfaces/ILightClient.sol";
 import {MessagingStorage} from "./MessagingStorage.sol";
 
-contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
+contract MessagingAccess is MessagingStorage, Ownable {
     /// @notice Emitted when the sendingEnabled flag is changed.
     event SendingEnabled(bool enabled);
 
@@ -23,47 +23,17 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     event Unfreeze(uint32 indexed chainId);
 
     /// @notice Emitted when setLightClientAndBroadcaster is called.
-    event SetLightClientAndBroadcaster(
-        uint32 indexed chainId,
-        address lightClient,
-        address broadcaster
-    );
+    // event SetLightClientAndBroadcaster(
+    //     uint32 indexed chainId,
+    //     address lightClient,
+    //     address broadcaster
+    // );
 
     /// @notice Emitted when a new source chain is added.
     event SourceChainAdded(uint32 indexed chainId);
 
-    /// @notice A random constant used to identify addresses with the permission of a 'guardian'.
-    bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
-
-    /// @notice A random constant used to identify addresses with the permission of a 'timelock'.
-    bytes32 public constant TIMELOCK_ROLE = keccak256("TIMELOCK_ROLE");
-
-    modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "MessagingAccess: only admin can call this function"
-        );
-        _;
-    }
-
-    modifier onlyTimelock() {
-        require(
-            hasRole(TIMELOCK_ROLE, msg.sender),
-            "MessagingAccess: only timelock can call this function"
-        );
-        _;
-    }
-
-    modifier onlyGuardian() {
-        require(
-            hasRole(GUARDIAN_ROLE, msg.sender),
-            "MessagingAccess: only guardian can call this function"
-        );
-        _;
-    }
-
     /// @notice Allows the owner to control whether sending is enabled or not.
-    function setSendingEnabled(bool enabled) external onlyGuardian {
+    function setSendingEnabled(bool enabled) external onlyOwner {
         sendingEnabled = enabled;
         emit SendingEnabled(enabled);
     }
@@ -71,7 +41,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Freezes messages from all chains.
     /// @dev This is a safety mechanism to prevent the contract from being used after a security
     ///      vulnerability is detected.
-    function freezeAll() external onlyGuardian {
+    function freezeAll() external onlyOwner {
         for (uint32 i = 0; i < sourceChainIds.length; i++) {
             frozen[sourceChainIds[i]] = true;
         }
@@ -81,7 +51,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Freezes messages from the specified chain.
     /// @dev This is a safety mechanism to prevent the contract from being used after a security
     ///      vulnerability is detected.
-    function freeze(uint32 chainId) external onlyGuardian {
+    function freeze(uint32 chainId) external onlyOwner {
         frozen[chainId] = true;
         emit Freeze(chainId);
     }
@@ -89,7 +59,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Unfreezes messages from the specified chain.
     /// @dev This is a safety mechanism to continue usage of the contract after a security
     ///      vulnerability is patched.
-    function unfreeze(uint32 chainId) external onlyGuardian {
+    function unfreeze(uint32 chainId) external onlyOwner {
         frozen[chainId] = false;
         emit Unfreeze(chainId);
     }
@@ -97,7 +67,7 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @notice Unfreezes messages from all chains.
     /// @dev This is a safety mechanism to continue usage of the contract after a security
     ///      vulnerability is patched.
-    function unfreezeAll() external onlyGuardian {
+    function unfreezeAll() external onlyOwner {
         for (uint32 i = 0; i < sourceChainIds.length; i++) {
             frozen[sourceChainIds[i]] = false;
         }
@@ -108,61 +78,85 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
     /// @dev This is controlled by the timelock as it is a potentially dangerous method
     ///      since both the light client and broadcaster address are critical in verifying
     ///      that only valid sent messages are executed.
-    function setLightClientAndBroadcaster(
-        uint32 chainId,
-        address lightclient,
-        address broadcaster
-    ) external onlyTimelock {
-        bool chainIdExists = false;
-        for (uint256 i = 0; i < sourceChainIds.length; i++) {
-            if (sourceChainIds[i] == chainId) {
-                chainIdExists = true;
-                break;
-            }
+    // function setLightClientAndBroadcaster(
+    //     uint32 chainId,
+    //     address lightclient,
+    //     address broadcaster
+    // ) external onlyOwner {
+    //     bool chainIdExists = false;
+    //     for (uint256 i = 0; i < sourceChainIds.length; i++) {
+    //         if (sourceChainIds[i] == chainId) {
+    //             chainIdExists = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!chainIdExists) {
+    //         sourceChainIds.push(chainId);
+    //         emit SourceChainAdded(chainId);
+    //     }
+    //     lightClients[chainId] = ILightClient(lightclient);
+    //     broadcasters[chainId] = broadcaster;
+    //     emit SetLightClientAndBroadcaster(chainId, lightclient, broadcaster);
+    // }
+
+    function setLightClient(
+        uint32[] memory chainIds,
+        address[] memory lightclient
+    ) external onlyOwner {
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            lightClients[chainIds[i]] = ILightClient(lightclient[i]);
         }
-        if (!chainIdExists) {
-            sourceChainIds.push(chainId);
-            emit SourceChainAdded(chainId);
-        }
-        lightClients[chainId] = ILightClient(lightclient);
-        broadcasters[chainId] = broadcaster;
-        emit SetLightClientAndBroadcaster(chainId, lightclient, broadcaster);
     }
 
-    function setRelayer(address _relayer, bool _isTrue) external onlyAdmin {
+    function setBroadcaster(
+        uint32[] memory chainIds,
+        address[] memory broadcaster
+    ) external onlyOwner {
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            broadcasters[chainIds[i]] = broadcaster[i];
+        }
+    }
+
+    function setRelayer(address _relayer, bool _isTrue) external onlyOwner {
         msgRelayer[_relayer] = _isTrue;
     }
 
-    function setChainRouter(uint32 _chainId, address _routerAddress) external onlyAdmin {
-        chainRouter[_chainId] = _routerAddress;
-    }
-
-    function setZKSyncAddress(address _zkSyncAddress) external onlyAdmin {
+    function setZKSync(
+        address _zkSyncAddress,
+        uint256 _l2Value,
+        uint256 _gasLimit,
+        uint256 _byteLimit,
+        bytes[] memory _factoryDeps,
+        address _recipient,
+        uint256 _value
+    ) external onlyOwner {
         zkSyncAddress = _zkSyncAddress;
-    }
-
-    function setZkSyncL2Value(uint256 _l2Value) external onlyAdmin {
         zkSyncL2Value = _l2Value;
-    }
-
-    function setZkSyncGasLimit(uint256 _gasLimit) external onlyAdmin{
         zkSyncL2GasLimit = _gasLimit;
+        zkSyncL2GasPerPubdataByteLimit = _byteLimit;
+        zkSyncFactoryDeps = _factoryDeps;
+        zkSyncRefundRecipient = _recipient;
+        zkSyncToL2Value = _value;
     }
 
-    function setZkSyncL2GasPerPubdataByteLimit(uint256 byteLimit) external onlyAdmin {
-        zkSyncL2GasPerPubdataByteLimit = byteLimit;
+    function setScroll(
+        address _scrollL1Messager,
+        address _scrollL2Messager,
+        uint256 _scrollL2GasLimit,
+        address _rollupAddress
+    ) external onlyOwner {
+        scrollL1Messager = _scrollL1Messager;
+        scrollL2Messager = _scrollL2Messager;
+        scrollL2GasLimit = _scrollL2GasLimit;
+        rollupAddress = _rollupAddress;
     }
 
-    function setZkSyncFactoryDeps(bytes[] memory value) external onlyAdmin {
-        zkSyncFactoryDeps = value;
-    }
-
-    function setZkSyncRefundRecipient(address recipient) external onlyAdmin {
-        zkSyncRefundRecipient = recipient;
-    }
-
-    function setZkSyncToL2Value(uint256 value) external onlyAdmin {
-        zkSyncToL2Value = value;
+    function setPolygon(
+        address _polygonL1Messager,
+        address _polugonL2Messager
+    ) external onlyOwner {
+        polygonL1Messager = _polygonL1Messager;
+        polygonL2Messager = _polugonL2Messager;
     }
 
     /*
@@ -170,12 +164,12 @@ contract MessagingAccess is MessagingStorage, AccessControlUpgradeable {
      * @return {*}
      * @param {bool} isDebug
      */
-    function changeDebugMode(bool isDebug) external onlyAdmin {
+    function changeDebugMode(bool isDebug) external onlyOwner {
         isDebugMode = isDebug;
     }
 
-    function withdraw(address receiver,uint256 amount) external onlyAdmin {
+    function withdraw(address receiver, uint256 amount) external onlyOwner {
         (bool success, ) = payable(receiver).call{value: amount}("");
-        require(success,"Withdraw Fail!");
+        require(success, "Withdraw Fail!");
     }
 }

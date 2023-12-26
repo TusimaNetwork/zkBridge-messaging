@@ -1,23 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import {StorageProof, EventProof} from "./libraries/StateProofHelper.sol";
+import {StorageProof} from "./libraries/StateProofHelper.sol";
 import {Address} from "./libraries/Typecast.sol";
+import {WithdrawTrieVerifier} from "./libraries/WithdrawTrieVerifier.sol";
 import {MessageEncoding} from "./libraries/MessageEncoding.sol";
 
 import {MessagingStorage} from "./MessagingStorage.sol";
 import {IReceiver, IRelayer, Message, MessageStatus} from "zkBridge-messaging-interfaces/src/interfaces/IMessaging.sol";
 
-import "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
+import {IZkSync, L2Message} from "./interfaces/IZkSync.sol";
+
+import {IScrollChain} from "./interfaces/IScrollChain.sol";
+
+import {IScroll} from "./interfaces/IScrollInterface.sol";
+import {IPolygonBridge, IPolygonInterface} from "./interfaces/IPolygon.sol";
+import {IScrollMessenger, IL1ScrollMessenger} from "./interfaces/IScrollMessenger.sol";
 
 /// @title Relayer contract
 /// @notice Relay messages from source chain to current chain.
 contract Relayer is
     MessagingStorage,
-    ReentrancyGuardUpgradeable,
-    IRelayer
+    ReentrancyGuard,
+    IRelayer,
+    IScroll,
+    IPolygonInterface
 {
     /// @notice The minimum delay for using any information from the light client.
     uint256 public constant MIN_LIGHT_CLIENT_DELAY = 2 minutes;
@@ -48,7 +57,9 @@ contract Relayer is
         bytes[] calldata accountProof,
         bytes[] calldata storageProof
     ) external override nonReentrant {
-        (Message memory message, bytes32 messageRoot) = _checkPreconditions(messageBytes);
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
         // requireLightClientConsistency(message.sourceChainId);
         requireNotFrozen(message.sourceChainId);
 
@@ -57,17 +68,26 @@ contract Relayer is
 
             bytes32 storageRoot;
             bytes32 cacheKey = keccak256(
-                abi.encodePacked(message.sourceChainId, slot, broadcasters[message.sourceChainId])
+                abi.encodePacked(
+                    message.sourceChainId,
+                    slot,
+                    broadcasters[message.sourceChainId]
+                )
             );
 
             // If the cache is empty for the cacheKey, then we get the
             // storageRoot using the provided accountProof.
             if (storageRootCache[cacheKey] == 0) {
-                bytes32 executionStateRoot =
-                    lightClients[message.sourceChainId].executionStateRoot(slot);
-                require(executionStateRoot != 0, "Execution State Root is not set");
+                bytes32 executionStateRoot = lightClients[message.sourceChainId]
+                    .executionStateRoot(slot);
+                require(
+                    executionStateRoot != 0,
+                    "Execution State Root is not set"
+                );
                 storageRoot = StorageProof.getStorageRoot(
-                    accountProof, broadcasters[message.sourceChainId], executionStateRoot
+                    accountProof,
+                    broadcasters[message.sourceChainId],
+                    executionStateRoot
                 );
                 storageRootCache[cacheKey] = storageRoot;
             } else {
@@ -75,9 +95,20 @@ contract Relayer is
             }
 
             bytes32 slotKey = keccak256(
-                abi.encode(keccak256(abi.encode(message.nonce, MESSAGES_MAPPING_STORAGE_INDEX)))
+                abi.encode(
+                    keccak256(
+                        abi.encode(
+                            message.nonce,
+                            MESSAGES_MAPPING_STORAGE_INDEX
+                        )
+                    )
+                )
             );
-            uint256 slotValue = StorageProof.getStorageValue(slotKey, storageRoot, storageProof);
+            uint256 slotValue = StorageProof.getStorageValue(
+                slotKey,
+                storageRoot,
+                storageProof
+            );
 
             if (bytes32(slotValue) != messageRoot) {
                 revert("Invalid message hash.");
@@ -101,40 +132,149 @@ contract Relayer is
 
     // zkSync --> layer 1
     function vMsgZkSyncL2ToL1(
-        address _someSender,
+        address someSender,
         // zkSync block number in which the message was sent
-        uint256 _l1BatchNumber,
+        uint256 l1BatchNumber,
         // Message index, that can be received via API
-        uint256 _proofId,
+        uint256 proofId,
         // The tx number in block
-        uint16 _trxIndex,
+        uint16 trxIndex,
         // The message that was sent from l2
-        bytes calldata _messageBytes,
+        bytes calldata messageBytes,
         // Merkle proof for the message
-        bytes32[] calldata _proof
+        bytes32[] calldata proof
     ) external override nonReentrant {
-        require(msgRelayer[msg.sender],"Wrong Sender!");
+        require(msgRelayer[msg.sender], "Wrong Sender!");
         (Message memory message, bytes32 messageRoot) = _checkPreconditions(
-            _messageBytes
+            messageBytes
         );
 
         IZkSync zksync = IZkSync(zkSyncAddress);
         L2Message memory l2Message = L2Message({
-            txNumberInBlock: _trxIndex,
-            sender: _someSender,
-            data: _messageBytes
+            txNumberInBlock: trxIndex,
+            sender: someSender,
+            data: messageBytes
         });
 
-        bool success = zksync.proveL2MessageInclusion(
-            _l1BatchNumber,
-            _proofId,
+        bool passVerify = zksync.proveL2MessageInclusion(
+            l1BatchNumber,
+            proofId,
             l2Message,
-            _proof
+            proof
         );
 
-        require(success, "Failed to prove message inclusion");
+        require(passVerify, "Failed to prove message inclusion");
 
-        _executeMessage(message, messageRoot, _messageBytes);
+        _executeMessage(message, messageRoot, messageBytes);
+    }
+
+    // scroll --> layer 1 to l2
+    function vMsgScrollL1ToL2(
+        bytes calldata messageBytes
+    ) external override nonReentrant {
+        require(msgRelayer[msg.sender], "Wrong Sender!");
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
+
+        _executeMessage(message, messageRoot, messageBytes);
+    }
+
+    // scroll --> layer 2 to l1
+    function vMsgScrollL2ToL1(
+        uint256 nonce,
+        uint256 batchIndex,
+        bytes calldata proof,
+        bytes calldata messageBytes
+    ) external override nonReentrant {
+        require(msgRelayer[msg.sender], "Wrong Sender!");
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
+
+        bytes32 _xDomainCalldataHash = keccak256(
+            abi.encodeWithSignature(
+                "relayMessage(address,address,uint256,uint256,bytes)",
+                broadcasters[message.sourceChainId],
+                address(this),
+                0,
+                nonce,
+                messageBytes
+            )
+        );
+
+        IScrollChain scrollChain = IScrollChain(rollupAddress);
+
+        require(
+            scrollChain.isBatchFinalized(batchIndex),
+            "Batch is not finalized"
+        );
+        bytes32 _messageTotalRoot = scrollChain.withdrawRoots(batchIndex);
+
+        bool passVerify = WithdrawTrieVerifier.verifyMerkleProof(
+            _messageTotalRoot,
+            _xDomainCalldataHash,
+            nonce,
+            proof
+        );
+        require(passVerify, "Failed to prove message inclusion");
+
+        _executeMessage(message, messageRoot, messageBytes);
+    }
+
+    // polygon --> l1 to l2 and l2 to l1
+    function vMsgPolygon(
+        bytes32[32] calldata smtProof,
+        uint32 index,
+        bytes32 exitRoot,
+        bytes calldata messageBytes
+    ) external override nonReentrant {
+        require(msgRelayer[msg.sender], "Wrong Sender!");
+        (Message memory message, bytes32 messageRoot) = _checkPreconditions(
+            messageBytes
+        );
+
+        uint8 leafType = 1;
+        uint256 amount = 0;
+
+        IPolygonBridge bridge;
+        uint32 originNetwork;
+        uint32 destinationNetwork;
+
+        //layer l2 to l1
+        if (block.chainid == 5) {
+            bridge = IPolygonBridge(polygonL1Messager);
+            originNetwork = 1;
+            destinationNetwork = 0;
+        }
+
+        //layer l1 to l2
+        if (block.chainid == 1442) {
+            bridge = IPolygonBridge(polygonL2Messager);
+            originNetwork = 0;
+            destinationNetwork = 1;
+        }
+
+        bytes32 leafValue = keccak256(
+            abi.encodePacked(
+                leafType,
+                originNetwork,
+                broadcasters[message.sourceChainId],
+                destinationNetwork,
+                address(this),
+                amount,
+                messageRoot
+            )
+        );
+
+        bool passVerify = bridge.verifyMerkleProof(
+            leafValue,
+            smtProof,
+            index,
+            exitRoot
+        );
+        require(passVerify, "Failed to prove message inclusion");
+        _executeMessage(message, messageRoot, messageBytes);
     }
 
     /// @notice Executes a message and updates storage with status and emits an event.
@@ -202,12 +342,13 @@ contract Relayer is
             revert("Wrong chain.");
         } else if (message.version != version) {
             revert("Wrong version.");
-        } 
-        else if (
-            address(lightClients[message.sourceChainId]) == address(0) ||
-            broadcasters[message.sourceChainId] == address(0)
+        } else if (
+            address(lightClients[message.sourceChainId]) == address(0) &&
+            uint32(block.chainid) == 97
         ) {
-            revert("Light client or broadcaster for source chain is not set");
+            revert("Light client for source chain is not set");
+        } else if (broadcasters[message.sourceChainId] == address(0)) {
+            revert("broadcasterfor source chain is not set");
         }
         return (message, messageRoot);
     }

@@ -53,14 +53,7 @@ contract MessagingStorage {
     /// @notice Storage root cache.
     mapping(bytes32 => bytes32) public storageRootCache;
 
-    /// @dev This empty reserved space is put in place to allow future versions to add new variables
-    /// without shifting down storage in the inheritance chain.
-    /// See: https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#storage-gaps
-    uint256[40] private __gap;
-
     mapping(address => bool) public msgRelayer;
-
-    mapping(uint32 => address) public chainRouter;
 
     address public zkSyncAddress; 
     uint256 public zkSyncL2Value;
@@ -69,4 +62,12 @@ contract MessagingStorage {
     bytes[] public zkSyncFactoryDeps;
     address public zkSyncRefundRecipient;
     uint256 public zkSyncToL2Value;
+
+    address public scrollL1Messager;
+    address public scrollL2Messager;
+    uint256 public scrollL2GasLimit;
+    address public rollupAddress;
+
+    address public polygonL1Messager;
+    address public polygonL2Messager;    
 }

@@ -39,5 +39,7 @@ $ forge fmt
     ```
 2. Execute deploy cmd.
     ```shell
-    $ forge script script/DeployMessaging.s.sol:DeployMessing --broadcast --verify --rpc-url <Network_RPC_URL>
+    $ forge script script/DeployMessaging.s.sol:DeployMessing --broadcast --verify --rpc-url <Network_RPC_URL> --legacy
+
+    $ zkforge zkc src/Messaging.sol:Messaging --rpc-url https://sepolia.era.zksync.dev:443 --chain 300 --constructor-args <"bool"> --private-key ""
     ```
