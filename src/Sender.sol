@@ -13,9 +13,6 @@ import {PolygonMessaging} from "./PolygonMessaging.sol";
 // import {IZkSync} from "v2-testnet-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
 // import "v2-testnet-contracts/l2/system-contracts/Constants.sol";
 
-/// @title Source Arbitrary Message Bridge
-/// @author Succinct Labs
-/// @notice This contract is the entrypoint for sending messages to other chains.
 contract Sender is ScrollMessaging, ZkSyncMessaging, PolygonMessaging, ISender {
     error SendingDisabled();
     error CannotSendToSameChain();
