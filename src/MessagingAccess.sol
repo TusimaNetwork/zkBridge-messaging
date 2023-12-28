@@ -127,8 +127,7 @@ contract MessagingAccess is MessagingStorage, Ownable {
         uint256 _gasLimit,
         uint256 _byteLimit,
         bytes[] memory _factoryDeps,
-        address _recipient,
-        uint256 _value
+        address _recipient
     ) external onlyOwner {
         zkSyncAddress = _zkSyncAddress;
         zkSyncL2Value = _l2Value;
@@ -136,7 +135,7 @@ contract MessagingAccess is MessagingStorage, Ownable {
         zkSyncL2GasPerPubdataByteLimit = _byteLimit;
         zkSyncFactoryDeps = _factoryDeps;
         zkSyncRefundRecipient = _recipient;
-        zkSyncToL2Value = _value;
+        // zkSyncToL2Value = _value;
     }
 
     function setScroll(

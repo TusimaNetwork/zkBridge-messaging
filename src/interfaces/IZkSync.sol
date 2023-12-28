@@ -46,4 +46,10 @@ interface IZkSync {
         L2Message calldata _message,
         bytes32[] calldata _proof
     ) external view returns (bool);
+
+    function l2TransactionBaseCost(
+        uint256 _gasPrice,
+        uint256 _l2GasLimit,
+        uint256 _l2GasPerPubdataByteLimit
+    ) external view returns (uint256);
 }

@@ -13,8 +13,9 @@ contract ZkSyncMessaging is MessagingStorage {
 
         IZkSync zksync = IZkSync(zkSyncAddress);
 
+        uint256 l2TxFee = zksync.l2TransactionBaseCost(tx.gasprice, zkSyncL2GasLimit, zkSyncL2GasPerPubdataByteLimit);
         // TODO Cause we don't charge any fee for now, but zkSync does, so we pay for them at this version.
-        zksync.requestL2Transaction{value: zkSyncToL2Value}(
+        zksync.requestL2Transaction{value: l2TxFee}(
             routerAddr,
             zkSyncL2Value,
             _calldata,

@@ -16,7 +16,7 @@ contract Messaging is Sender, Relayer, MessagingAccess {
         zkSyncL2Value = 0;
         zkSyncL2GasLimit = 2000000;
         zkSyncL2GasPerPubdataByteLimit = 800;
-        zkSyncToL2Value = 0.001 ether;
+        // zkSyncToL2Value = 0.001 ether;
 
         scrollL1Messager = 0x50c7d3e7f7c656493D1D76aaa1a836CedfCBB16A;
         scrollL2Messager = 0xBa50f5340FB9F3Bd074bD638c9BE13eCB36E603d;

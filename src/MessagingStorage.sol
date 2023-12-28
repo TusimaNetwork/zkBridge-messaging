@@ -61,7 +61,7 @@ contract MessagingStorage {
     uint256 public zkSyncL2GasPerPubdataByteLimit;
     bytes[] public zkSyncFactoryDeps;
     address public zkSyncRefundRecipient;
-    uint256 public zkSyncToL2Value;
+    // uint256 public zkSyncToL2Value;
 
     address public scrollL1Messager;
     address public scrollL2Messager;
