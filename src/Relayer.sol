@@ -122,10 +122,12 @@ contract Relayer is
     function vMsgZkSyncL1ToL2(
         bytes calldata messageBytes
     ) external override nonReentrant {
-        require(msgRelayer[msg.sender], "Wrong Sender!");
         (Message memory message, bytes32 messageRoot) = _checkPreconditions(
             messageBytes
         );
+
+        address zksyncRelayer = getAddress(broadcasters[message.sourceChainId]);
+        require(zksyncRelayer == msg.sender, "Wrong Sender!");
 
         _executeMessage(message, messageRoot, messageBytes);
     }
@@ -356,6 +358,12 @@ contract Relayer is
     /// @notice Checks that the chainId is not frozen.
     function requireNotFrozen(uint32 chainId) internal view {
         require(!frozen[chainId], "Contract is frozen.");
+    }
+
+    // calculate zkSync address
+    function getAddress(address sender) public pure returns (address) {
+        uint160 offset = uint160(0x1111000000000000000000000000000000001111);
+        return address(uint160(sender) + offset);
     }
 
     /// @notice Checks that the light client for a given chainId is consistent.
